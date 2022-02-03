@@ -2,9 +2,11 @@ package com.idfinance.cryptocurrency.service.cryptoCoinService;
 
 import com.idfinance.cryptocurrency.dto.Coin;
 import com.idfinance.cryptocurrency.dto.CoinView;
+import com.idfinance.cryptocurrency.dto.CreateSubscriptionRequest;
 import com.idfinance.cryptocurrency.model.CryptoCoin;
 import com.idfinance.cryptocurrency.service.CoinLoreService.api.ICoinLoreResponseService;
 import com.idfinance.cryptocurrency.service.cryptoCoinService.api.ICryptoCoinService;
+import com.idfinance.cryptocurrency.service.userNotifyService.api.IUserNotifyService;
 import com.idfinance.cryptocurrency.storage.api.ICryptoCoinRepository;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -20,13 +22,13 @@ public class CryptoCoinService implements ICryptoCoinService {
 
     private final ICryptoCoinRepository repository;
     private final ICoinLoreResponseService coinLoreResponseService;
+    private final IUserNotifyService userNotifyService;
 
-    public CryptoCoinService(ICryptoCoinRepository repository, ICoinLoreResponseService coinLoreResponseService) {
+    public CryptoCoinService(ICryptoCoinRepository repository, ICoinLoreResponseService coinLoreResponseService, IUserNotifyService userNotifyService) {
         this.repository = repository;
         this.coinLoreResponseService = coinLoreResponseService;
+        this.userNotifyService = userNotifyService;
     }
-
-
 
     @Override
     public List<CoinView> getAll() {
@@ -36,8 +38,20 @@ public class CryptoCoinService implements ICryptoCoinService {
     @Override
     public CoinView getCryptoCoinPrice(String symbol) {
         CryptoCoin cryptoCoin = this.repository.findBySymbol(symbol).orElseThrow(
-                () -> new RuntimeException(format("Entity with symbol = %s Not Found", symbol)));
+                () -> new RuntimeException(format("CryptoCoin with symbol = %s Not Found", symbol)));
         return new CoinView(cryptoCoin.getName(), cryptoCoin.getSymbol(), cryptoCoin.getUsd_price());
+    }
+
+    @Override
+    public void addSubscription(CreateSubscriptionRequest request) {
+        CryptoCoin cryptoCoin = this.repository.findBySymbol(request.getSymbol()).orElseThrow(
+                () -> new RuntimeException(format("CryptoCoin with symbol = %s Not Found", request.getSymbol())));
+        this.userNotifyService.addSubscription(request, cryptoCoin);
+    }
+
+    @Override
+    public void deleteSubscription(CreateSubscriptionRequest request) {
+        this.userNotifyService.deleteSubscription(request);
     }
 
     private void loadCoinsData() {
@@ -47,22 +61,27 @@ public class CryptoCoinService implements ICryptoCoinService {
                     .whenCompleteAsync((result, exp) -> {
                                 if(exp == null) {
                                     try {
+                                        CryptoCoin cryptoCoin;
                                         CoinView coinView = result.take();
                                         Optional<CryptoCoin> cryptoCoinOptional = this.repository.findBySymbol(coinView.getSymbol());
                                         if(cryptoCoinOptional.isPresent()) {
-                                            CryptoCoin cryptoCoin = cryptoCoinOptional.get();
+                                            cryptoCoin = cryptoCoinOptional.get();
                                             if(!cryptoCoin.getUsd_price().equals(coinView.getBigDecimalPrice_usd())) {
                                                 cryptoCoin.setUsd_price(coinView.getBigDecimalPrice_usd());
                                                 this.repository.save(cryptoCoin);
                                             }
                                         } else {
-                                            this.repository.save(new CryptoCoin(coinView.getName(), coinView.getSymbol(), coinView.getBigDecimalPrice_usd()));
+                                            cryptoCoin = this.repository.save(
+                                                    new CryptoCoin(coinView.getName(),
+                                                            coinView.getSymbol(),
+                                                            coinView.getBigDecimalPrice_usd()));
                                         }
+                                        userNotifyService.checkPrice(cryptoCoin);
                                     } catch (InterruptedException ex) {
                                         ex.printStackTrace();
                                     }
                                 } else {
-                                    System.out.println(exp.getMessage());
+                                    exp.printStackTrace();
                                 }
                             }
                     );

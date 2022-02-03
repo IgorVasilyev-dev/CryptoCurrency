@@ -5,6 +5,8 @@ import com.idfinance.cryptocurrency.service.CoinLoreService.CoinLoreResponseServ
 import com.idfinance.cryptocurrency.service.CoinLoreService.api.ICoinLoreResponseService;
 import com.idfinance.cryptocurrency.service.cryptoCoinService.CryptoCoinService;
 import com.idfinance.cryptocurrency.service.cryptoCoinService.api.ICryptoCoinService;
+import com.idfinance.cryptocurrency.service.userNotifyService.UserNotifyService;
+import com.idfinance.cryptocurrency.service.userNotifyService.api.IUserNotifyService;
 import com.idfinance.cryptocurrency.storage.api.ICryptoCoinRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -22,8 +24,9 @@ public class AppConfiguration {
 
     @Bean
     ICryptoCoinService cryptoCoinService(ICryptoCoinRepository repository,
-                                         ICoinLoreResponseService coinLoreResponseService) {
-        return new CryptoCoinService(repository, coinLoreResponseService);
+                                         ICoinLoreResponseService coinLoreResponseService,
+                                         IUserNotifyService userNotifyService) {
+        return new CryptoCoinService(repository, coinLoreResponseService, userNotifyService);
     }
 
     @Bean
@@ -36,4 +39,8 @@ public class AppConfiguration {
         return new CoinLoreResponseService(restTemplate, coinLoreRequestProperty);
     }
 
+    @Bean
+    IUserNotifyService userNotifyService() {
+        return new UserNotifyService();
+    }
 }

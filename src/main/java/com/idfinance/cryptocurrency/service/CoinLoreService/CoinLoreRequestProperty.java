@@ -23,7 +23,7 @@ public class CoinLoreRequestProperty {
     private final List<Coin> coinList = new ArrayList<>();
 
     @PostConstruct
-    void init() {
+    private void init() {
         File file = new File(resourcesPath);
         if (file.exists()){
             ObjectMapper objectMapper = new ObjectMapper();

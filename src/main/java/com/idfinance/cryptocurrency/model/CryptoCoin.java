@@ -75,4 +75,14 @@ public class CryptoCoin {
     public int hashCode() {
         return Objects.hash(name, symbol, usd_price);
     }
+
+    @Override
+    public String toString() {
+        return "CryptoCoin{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", symbol='" + symbol + '\'' +
+                ", usd_price=" + usd_price +
+                '}';
+    }
 }

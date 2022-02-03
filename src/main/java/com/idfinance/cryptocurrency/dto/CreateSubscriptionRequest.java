@@ -26,4 +26,11 @@ public class CreateSubscriptionRequest {
         this.symbol = symbol;
     }
 
+    @Override
+    public String toString() {
+        return "CreateSubscriptionRequest{" +
+                "userName='" + userName + '\'' +
+                ", symbol='" + symbol + '\'' +
+                '}';
+    }
 }
