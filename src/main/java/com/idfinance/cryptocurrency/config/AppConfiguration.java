@@ -22,9 +22,8 @@ public class AppConfiguration {
 
     @Bean
     ICryptoCoinService cryptoCoinService(ICryptoCoinRepository repository,
-                                         ICoinLoreResponseService coinLoreResponseService,
-                                         CoinLoreRequestProperty coinLoreRequestProperty) {
-        return new CryptoCoinService(repository, coinLoreResponseService, coinLoreRequestProperty);
+                                         ICoinLoreResponseService coinLoreResponseService) {
+        return new CryptoCoinService(repository, coinLoreResponseService);
     }
 
     @Bean

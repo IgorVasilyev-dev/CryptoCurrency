@@ -10,6 +10,6 @@ public interface ICoinLoreResponseService {
 
     List<Coin> getAllAvailableCoins();
 
-    BlockingQueue<CoinView> getResponse(String url);
+    BlockingQueue<CoinView> getResponse(Long id);
 
 }

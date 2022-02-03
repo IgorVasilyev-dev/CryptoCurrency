@@ -1,9 +1,6 @@
 package com.idfinance.cryptocurrency.model;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Objects;
 
@@ -12,6 +9,7 @@ import java.util.Objects;
 public class CryptoCoin {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
 
@@ -25,6 +23,12 @@ public class CryptoCoin {
     private BigDecimal usd_price;
 
     public CryptoCoin() {
+    }
+
+    public CryptoCoin(String name, String symbol, BigDecimal usd_price) {
+        this.name = name;
+        this.symbol = symbol;
+        this.usd_price = usd_price;
     }
 
     public Long getId() {

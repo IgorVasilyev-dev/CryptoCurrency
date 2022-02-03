@@ -14,11 +14,12 @@ public class CoinLoreResponseService implements ICoinLoreResponseService {
 
     private final RestTemplate restTemplate;
     private final CoinLoreRequestProperty coinLoreRequestProperty;
-    BlockingQueue<CoinView> ff = new ArrayBlockingQueue<>(3, true);
+    private final BlockingQueue<CoinView> coinViewBlockingQueue;
 
     public CoinLoreResponseService(RestTemplate restTemplate, CoinLoreRequestProperty coinLoreRequestProperty) {
         this.restTemplate = restTemplate;
         this.coinLoreRequestProperty = coinLoreRequestProperty;
+        this.coinViewBlockingQueue = new ArrayBlockingQueue<>(coinLoreRequestProperty.getCoinList().size());
     }
 
 
@@ -28,9 +29,10 @@ public class CoinLoreResponseService implements ICoinLoreResponseService {
     }
 
     @Override
-    public BlockingQueue<CoinView> getResponse(String url) {
-        this.ff.add(Objects.requireNonNull(restTemplate.getForObject(url, CoinView[].class))[0]);
-        return this.ff;
+    public BlockingQueue<CoinView> getResponse(Long id) {
+        this.coinViewBlockingQueue.add(Objects.requireNonNull(
+                restTemplate.getForObject((coinLoreRequestProperty.getBaseUrl() + "/?id=" + id), CoinView[].class))[0]);
+        return this.coinViewBlockingQueue;
     }
 
 }

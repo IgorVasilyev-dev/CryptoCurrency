@@ -1,8 +1,8 @@
 package com.idfinance.cryptocurrency.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 
@@ -44,6 +44,11 @@ public class CoinView {
 
     public String getPrice_usd() {
         return df.format(price_usd.stripTrailingZeros());
+    }
+
+    @JsonIgnore
+    public BigDecimal getBigDecimalPrice_usd() {
+        return price_usd;
     }
 
     public void setPrice_usd(BigDecimal price_usd) {
