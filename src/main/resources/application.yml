@@ -1,0 +1,24 @@
+server:
+  port: 8080
+
+coinLore:
+  url: https://api.coinlore.net/api/ticker
+  available_coins: src/main/resources/available_coins.json
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/cryptodb
+    username: postgres
+    password: postgres
+    hikari:
+      minimum-idle: 5
+      auto-commit: false
+      maximum-pool-size: 20
+  jpa:
+    generate-ddl: false
+    show_sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQL10Dialect
+        hbm2ddl: none
