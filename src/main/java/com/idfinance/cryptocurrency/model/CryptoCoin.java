@@ -13,13 +13,13 @@ public class CryptoCoin {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @Column(name = "name", nullable = false, unique = true)
+    @Column(name = "name",columnDefinition = "varchar(25)", nullable = false, unique = true)
     private String name;
 
-    @Column(name = "symbol", nullable = false, unique = true)
+    @Column(name = "symbol",columnDefinition = "varchar(25)", nullable = false, unique = true)
     private String symbol;
 
-    @Column(name = "price", nullable = false)
+    @Column(name = "price",columnDefinition = "numeric", precision = 21, scale = 9, nullable = false)
     private BigDecimal usd_price;
 
     public CryptoCoin() {
