@@ -4,7 +4,6 @@ server:
 coinLore:
   url: https://api.coinlore.net/api/ticker
   available_coins: src/main/resources/available_coins.json
-
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
@@ -22,3 +21,8 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQL10Dialect
         hbm2ddl: none
+logging:
+  file:
+    name: target/log/myapp.log
+  level:
+    com.idfinance.cryptocurrency.service.userNotifyService: WARN
