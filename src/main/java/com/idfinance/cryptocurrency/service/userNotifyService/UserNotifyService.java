@@ -20,6 +20,11 @@ public class UserNotifyService implements IUserNotifyService {
     private static final Logger log = Logger.getLogger(UserNotifyService.class.getName());
     private final Map<String, HashSet<UserSubscription>> cache = new ConcurrentHashMap<>();
 
+    /**
+     * Метод добавляет подписку на coin
+     * @param request подписка
+     * @param coin токен
+     */
     @Override
     public void addSubscription(CreateSubscriptionRequest request, CryptoCoin coin) {
         if(cache.containsKey(coin.getSymbol())) {
@@ -35,6 +40,10 @@ public class UserNotifyService implements IUserNotifyService {
         }
     }
 
+    /**
+     * Метод удаляет подписку на токен
+     * @param request подписка
+     */
     @Override
     public void deleteSubscription(CreateSubscriptionRequest request) {
         if(cache.containsKey(request.getSymbol())) {
@@ -44,6 +53,11 @@ public class UserNotifyService implements IUserNotifyService {
         }
     }
 
+    /**
+     * Метод проверки стоимости токена к стоимости токена в подписке
+     * Если стоимость изменилась на 1%, в лог пишется сообщение уровня WARN
+     * @param coin токен
+     */
     @Override
     public void checkPrice(CryptoCoin coin) {
         for (Map.Entry<String, HashSet<UserSubscription>> e: this.cache.entrySet()) {
@@ -51,7 +65,7 @@ public class UserNotifyService implements IUserNotifyService {
                 for (UserSubscription userSubscription: e.getValue()) {
                     BigDecimal delta = userSubscription.getPrice().
                             divide(coin.getUsd_price(), 9, RoundingMode.HALF_EVEN).subtract(BigDecimal.ONE).abs();
-                    if((delta.compareTo(new BigDecimal("0.0001")) >= 0)) {
+                    if((delta.compareTo(new BigDecimal("0.01")) >= 0)) {
                         log.log(Level.WARNING, format("Token = %s,User = %s, percent change = %s",
                                 userSubscription.getSymbol(),
                                 userSubscription.getUserName(),

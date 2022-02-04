@@ -22,6 +22,9 @@ public class CoinLoreRequestProperty {
 
     private final List<Coin> coinList = new ArrayList<>();
 
+    /**
+     * Загрузка данных в coinList из файла(json) после инициализации
+     */
     @PostConstruct
     private void init() {
         File file = new File(resourcesPath);

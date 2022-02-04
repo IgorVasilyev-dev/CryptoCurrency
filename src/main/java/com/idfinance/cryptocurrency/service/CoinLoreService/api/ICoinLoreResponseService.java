@@ -8,8 +8,17 @@ import java.util.concurrent.BlockingQueue;
 
 public interface ICoinLoreResponseService {
 
+    /**
+     * Получить список доступных монет
+     * @return List<Coin>
+     */
     List<Coin> getAllAvailableCoins();
 
+    /**
+     * Получить данные с удаленного api
+     * @param id токена
+     * @return BlockingQueue<CoinView>
+     */
     BlockingQueue<CoinView> getResponse(Long id);
 
 }

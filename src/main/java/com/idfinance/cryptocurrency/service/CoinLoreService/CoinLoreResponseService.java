@@ -23,11 +23,20 @@ public class CoinLoreResponseService implements ICoinLoreResponseService {
     }
 
 
+    /**
+     * Получить список доступных монет из конфигурации CoinLoreRequestProperty
+     * @return список доступных монет
+     */
     @Override
     public List<Coin> getAllAvailableCoins() {
         return this.coinLoreRequestProperty.getCoinList();
     }
 
+    /**
+     * Получить данные с удаленного api
+     * @param id токена
+     * @return блокирующая очередь потоков, очередь ограничена количеством токенов в конфигурации CoinLoreRequestProperty
+     */
     @Override
     public BlockingQueue<CoinView> getResponse(Long id) {
         this.coinViewBlockingQueue.add(Objects.requireNonNull(
