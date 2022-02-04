@@ -1,0 +1,35 @@
+CREATE DATABASE cryptodb
+    WITH
+    OWNER = postgres
+    ENCODING = 'UTF8'
+    LC_COLLATE = 'Russian_Russia.1251'
+    LC_CTYPE = 'Russian_Russia.1251'
+    TABLESPACE = pg_default
+    CONNECTION LIMIT = -1;
+
+CREATE SCHEMA public
+    AUTHORIZATION postgres;
+
+COMMENT ON SCHEMA public
+    IS 'standard public schema';
+
+GRANT ALL ON SCHEMA public TO PUBLIC;
+
+GRANT ALL ON SCHEMA public TO postgres;
+
+
+CREATE TABLE public.crypto_coins
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
+    symbol character varying(25) COLLATE pg_catalog."default" NOT NULL,
+    price numeric(21,9) NOT NULL,
+    name character varying(25) COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT crypto_coins_pkey PRIMARY KEY (id),
+    CONSTRAINT name_unique UNIQUE (name),
+    CONSTRAINT symbol_unique UNIQUE (symbol)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE public.crypto_coins
+    OWNER to postgres;
