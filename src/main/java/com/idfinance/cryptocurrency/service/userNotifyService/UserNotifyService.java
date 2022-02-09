@@ -19,6 +19,7 @@ public class UserNotifyService implements IUserNotifyService {
 
     private static final Logger log = Logger.getLogger(UserNotifyService.class.getName());
     private final Map<String, HashSet<UserSubscription>> cache = new ConcurrentHashMap<>();
+    private final BigDecimal percentRate = new BigDecimal("0.01");
 
     /**
      * Метод добавляет подписку на coin
@@ -65,11 +66,11 @@ public class UserNotifyService implements IUserNotifyService {
                 for (UserSubscription userSubscription: e.getValue()) {
                     BigDecimal delta = userSubscription.getPrice().
                             divide(coin.getUsd_price(), 9, RoundingMode.HALF_EVEN).subtract(BigDecimal.ONE).abs();
-                    if((delta.compareTo(new BigDecimal("0.01")) >= 0)) {
+                    if((delta.compareTo(percentRate) >= 0)) {
                         log.log(Level.WARNING, format("Token = %s,User = %s, percent change = %s",
                                 userSubscription.getSymbol(),
                                 userSubscription.getUserName(),
-                                delta.multiply(new BigDecimal("100"))));
+                                delta.multiply(BigDecimal.valueOf(100L))));
                     }
                 }
             }
