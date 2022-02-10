@@ -18,7 +18,7 @@ public class UserNotifyService implements IUserNotifyService {
 
     private static final Logger log = Logger.getLogger(UserNotifyService.class.getName());
     private final Map<String, HashSet<UserSubscriptionWithPrice>> cache = new ConcurrentHashMap<>();
-    private final BigDecimal percentRate = new BigDecimal("0.00001");
+    private final BigDecimal percentRate = new BigDecimal("0.01");
 
     /**
      * Метод добавляет подписку на coin
