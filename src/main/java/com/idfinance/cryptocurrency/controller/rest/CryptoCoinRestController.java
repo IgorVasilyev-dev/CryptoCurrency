@@ -1,6 +1,6 @@
 package com.idfinance.cryptocurrency.controller.rest;
 
-import com.idfinance.cryptocurrency.dto.CreateSubscriptionRequest;
+import com.idfinance.cryptocurrency.dto.UserSubscription;
 import com.idfinance.cryptocurrency.service.cryptoCoinService.api.ICryptoCoinService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,11 +9,11 @@ import javax.validation.Valid;
 
 @RestController
 @RequestMapping(value = "/crypto")
-public class CryptoCoinRestServlet {
+public class CryptoCoinRestController {
 
     private final ICryptoCoinService cryptoCoinService;
 
-    public CryptoCoinRestServlet(ICryptoCoinService cryptoCoinService) {
+    public CryptoCoinRestController(ICryptoCoinService cryptoCoinService) {
         this.cryptoCoinService = cryptoCoinService;
     }
 
@@ -28,13 +28,13 @@ public class CryptoCoinRestServlet {
     }
 
     @PostMapping(value = "/notify", consumes = {"application/json"}, produces = {"application/json"})
-    ResponseEntity<?> userAddNotify(@Valid @RequestBody CreateSubscriptionRequest request) {
+    ResponseEntity<?> userAddNotify(@Valid @RequestBody UserSubscription request) {
         cryptoCoinService.addSubscription(request);
         return ResponseEntity.ok().body("вы подписаны на " + request.getSymbol());
     }
 
     @DeleteMapping(value = "/notify", consumes = {"application/json"}, produces = {"application/json"})
-    ResponseEntity<?> userDeleteNotify(@Valid @RequestBody CreateSubscriptionRequest request) {
+    ResponseEntity<?> userDeleteNotify(@Valid @RequestBody UserSubscription request) {
         cryptoCoinService.deleteSubscription(request);
         return ResponseEntity.ok().body("вы удалили подписку на " + request.getSymbol());
     }

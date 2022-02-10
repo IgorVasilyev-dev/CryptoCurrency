@@ -1,22 +1,21 @@
 package com.idfinance.cryptocurrency.service.userNotifyService.api;
 
-import com.idfinance.cryptocurrency.dto.CreateSubscriptionRequest;
+import com.idfinance.cryptocurrency.dto.UserSubscriptionWithPrice;
 import com.idfinance.cryptocurrency.model.CryptoCoin;
 
 public interface IUserNotifyService {
 
     /**
      * Подписаться на изменения стоимости coin
-     * @param request подписка
-     * @param coin токен
+     * @param userSubscriptionWithPrice подписка
      */
-    void addSubscription(CreateSubscriptionRequest request, CryptoCoin coin);
+    void addSubscription(UserSubscriptionWithPrice userSubscriptionWithPrice);
 
     /**
      * Удалить подписку на токен
-     * @param request подписка
+     * @param userSubscriptionWithPrice подписка
      */
-    void deleteSubscription(CreateSubscriptionRequest request);
+    void deleteSubscription(UserSubscriptionWithPrice userSubscriptionWithPrice);
 
     /**
      * Проверить стоимость токена

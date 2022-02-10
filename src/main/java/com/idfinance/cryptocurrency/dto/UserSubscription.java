@@ -1,24 +1,15 @@
 package com.idfinance.cryptocurrency.dto;
 
-import java.math.BigDecimal;
+import javax.validation.constraints.NotBlank;
 import java.util.Objects;
 
 public class UserSubscription {
 
+    @NotBlank
     private String userName;
 
+    @NotBlank
     private String symbol;
-
-    private String tokenName;
-
-    private BigDecimal price;
-
-    public UserSubscription(String userName, String symbol, String tokenName, BigDecimal price) {
-        this.userName = userName;
-        this.symbol = symbol;
-        this.tokenName = tokenName;
-        this.price = price;
-    }
 
     public UserSubscription(String userName, String symbol) {
         this.userName = userName;
@@ -41,22 +32,6 @@ public class UserSubscription {
         this.symbol = symbol;
     }
 
-    public String getTokenName() {
-        return tokenName;
-    }
-
-    public void setTokenName(String tokenName) {
-        this.tokenName = tokenName;
-    }
-
-    public BigDecimal getPrice() {
-        return price;
-    }
-
-    public void setPrice(BigDecimal price) {
-        this.price = price;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -75,8 +50,6 @@ public class UserSubscription {
         return "UserSubscription{" +
                 "userName='" + userName + '\'' +
                 ", symbol='" + symbol + '\'' +
-                ", tokenName='" + tokenName + '\'' +
-                ", price=" + price +
                 '}';
     }
 }

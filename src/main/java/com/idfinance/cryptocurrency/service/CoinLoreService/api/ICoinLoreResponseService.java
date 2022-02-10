@@ -4,6 +4,7 @@ import com.idfinance.cryptocurrency.dto.Coin;
 import com.idfinance.cryptocurrency.dto.CoinView;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 
 public interface ICoinLoreResponseService {
@@ -17,8 +18,8 @@ public interface ICoinLoreResponseService {
     /**
      * Получить данные с удаленного api
      * @param id токена
-     * @return BlockingQueue<CoinView>
+     * @return BlockingQueue<Optional<CoinView>>
      */
-    BlockingQueue<CoinView> getResponse(Long id);
+    BlockingQueue<Optional<CoinView>> getResponse(Long id);
 
 }

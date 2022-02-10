@@ -2,6 +2,7 @@ package com.idfinance.cryptocurrency.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.idfinance.cryptocurrency.model.CryptoCoin;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -18,6 +19,12 @@ public class CoinView {
     private final DecimalFormat df = new DecimalFormat("0.00#######");
 
     public CoinView() {
+    }
+
+    public CoinView(CryptoCoin cryptoCoin) {
+        this.name = cryptoCoin.getName();
+        this.symbol = cryptoCoin.getSymbol();
+        this.price_usd = cryptoCoin.getUsd_price();
     }
 
     public CoinView(String name, String symbol, BigDecimal price_usd) {

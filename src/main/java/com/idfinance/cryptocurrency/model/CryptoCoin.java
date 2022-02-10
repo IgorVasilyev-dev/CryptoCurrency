@@ -1,5 +1,7 @@
 package com.idfinance.cryptocurrency.model;
 
+import com.idfinance.cryptocurrency.dto.CoinView;
+
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Objects;
@@ -29,6 +31,12 @@ public class CryptoCoin {
         this.name = name;
         this.symbol = symbol;
         this.usd_price = usd_price;
+    }
+
+    public CryptoCoin(CoinView coinView) {
+        this.name = coinView.getName();
+        this.symbol = coinView.getSymbol();
+        this.usd_price = coinView.getBigDecimalPrice_usd();
     }
 
     public Long getId() {

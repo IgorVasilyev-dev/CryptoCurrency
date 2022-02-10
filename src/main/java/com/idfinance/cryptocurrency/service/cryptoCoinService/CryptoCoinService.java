@@ -2,7 +2,8 @@ package com.idfinance.cryptocurrency.service.cryptoCoinService;
 
 import com.idfinance.cryptocurrency.dto.Coin;
 import com.idfinance.cryptocurrency.dto.CoinView;
-import com.idfinance.cryptocurrency.dto.CreateSubscriptionRequest;
+import com.idfinance.cryptocurrency.dto.UserSubscription;
+import com.idfinance.cryptocurrency.dto.UserSubscriptionWithPrice;
 import com.idfinance.cryptocurrency.model.CryptoCoin;
 import com.idfinance.cryptocurrency.service.CoinLoreService.api.ICoinLoreResponseService;
 import com.idfinance.cryptocurrency.service.cryptoCoinService.api.ICryptoCoinService;
@@ -13,10 +14,7 @@ import org.springframework.context.event.EventListener;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
@@ -39,7 +37,7 @@ public class CryptoCoinService implements ICryptoCoinService {
      */
     @Override
     public List<CoinView> getAll() {
-        return this.repository.findAll().stream().map(e -> new CoinView(e.getName(), e.getSymbol(), e.getUsd_price())).collect(Collectors.toList());
+        return this.repository.findAll().stream().map(CoinView::new).collect(Collectors.toList());
     }
 
     /**
@@ -51,7 +49,7 @@ public class CryptoCoinService implements ICryptoCoinService {
     public CoinView getCryptoCoinPrice(String symbol) {
         CryptoCoin cryptoCoin = this.repository.findBySymbol(symbol).orElseThrow(
                 () -> new RuntimeException(format("CryptoCoin with symbol = %s Not Found", symbol)));
-        return new CoinView(cryptoCoin.getName(), cryptoCoin.getSymbol(), cryptoCoin.getUsd_price());
+        return new CoinView(cryptoCoin);
     }
 
     /**
@@ -59,10 +57,11 @@ public class CryptoCoinService implements ICryptoCoinService {
      * @param request подписка
      */
     @Override
-    public void addSubscription(CreateSubscriptionRequest request) {
+    public void addSubscription(UserSubscription request) {
         CryptoCoin cryptoCoin = this.repository.findBySymbol(request.getSymbol()).orElseThrow(
                 () -> new RuntimeException(format("CryptoCoin with symbol = %s Not Found", request.getSymbol())));
-        this.userNotifyService.addSubscription(request, cryptoCoin);
+        this.userNotifyService.addSubscription(new UserSubscriptionWithPrice(
+                request.getUserName(), cryptoCoin));
     }
 
     /**
@@ -70,43 +69,51 @@ public class CryptoCoinService implements ICryptoCoinService {
      * @param request подписка
      */
     @Override
-    public void deleteSubscription(CreateSubscriptionRequest request) {
-        this.userNotifyService.deleteSubscription(request);
+    public void deleteSubscription(UserSubscription request) {
+        this.userNotifyService.deleteSubscription(new UserSubscriptionWithPrice(
+                request.getUserName(), request.getSymbol()));
     }
 
     /**
      * Метод асинхронной загрузки данных из удаленного источника в бд
-     * Если цена токена изменилась, сохраняем изменения в бд и проверяем подписку
      */
     private void loadCoinsData() {
         for (Coin e:coinLoreResponseService.getAllAvailableCoins()) {
             CompletableFuture.supplyAsync(() -> this.coinLoreResponseService.getResponse(e.getId()))
-                    .whenCompleteAsync((result, exp) -> {
-                                if(exp == null) {
-                                    try {
-                                        CryptoCoin cryptoCoin;
-                                        CoinView coinView = result.take();
-                                        Optional<CryptoCoin> cryptoCoinOptional = this.repository.findBySymbol(coinView.getSymbol());
-                                        if(cryptoCoinOptional.isPresent()) {
-                                            cryptoCoin = cryptoCoinOptional.get();
-                                            if(!cryptoCoin.getUsd_price().equals(coinView.getBigDecimalPrice_usd())) {
-                                                cryptoCoin.setUsd_price(coinView.getBigDecimalPrice_usd());
-                                                userNotifyService.checkPrice(this.repository.save(cryptoCoin));
-                                            }
-                                        } else {
-                                            this.repository.save(
-                                                    new CryptoCoin(coinView.getName(),
-                                                            coinView.getSymbol(),
-                                                            coinView.getBigDecimalPrice_usd()));
-                                        }
-                                    } catch (InterruptedException ex) {
-                                        ex.printStackTrace();
-                                    }
-                                } else {
-                                    exp.printStackTrace();
-                                }
-                            }
-                    );
+                    .whenCompleteAsync((result, exception) -> {
+                        if(exception == null) {
+                            this.checkAndSave(result);
+                        } else {
+                            exception.printStackTrace();
+                        }
+                    });
+        }
+    }
+
+    /**
+     * Метод проверки цены токена и сохранения в бд
+     * Если цена токена изменилась, сохраняем изменения в бд и проверяем подписку
+     * @param result BlockingQueue<CoinView>
+     */
+    private void checkAndSave(BlockingQueue<Optional<CoinView>> result) {
+        Optional<CoinView> optionalCoinView = Optional.empty();
+        try {
+            optionalCoinView = result.take();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if (optionalCoinView.isPresent()) {
+            CoinView source = optionalCoinView.get();
+            Optional<CryptoCoin> cryptoCoinOptional = this.repository.findBySymbol(source.getSymbol());
+            if(cryptoCoinOptional.isPresent()) {
+                CryptoCoin target = cryptoCoinOptional.get();
+                if(!target.getUsd_price().equals(source.getBigDecimalPrice_usd())) {
+                    target.setUsd_price(source.getBigDecimalPrice_usd());
+                    userNotifyService.checkPrice(this.repository.save(target));
+                }
+            } else {
+                this.repository.save(new CryptoCoin(source));
+            }
         }
     }
 

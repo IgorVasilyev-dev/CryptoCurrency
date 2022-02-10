@@ -1,7 +1,6 @@
 package com.idfinance.cryptocurrency.service.userNotifyService;
 
-import com.idfinance.cryptocurrency.dto.CreateSubscriptionRequest;
-import com.idfinance.cryptocurrency.dto.UserSubscription;
+import com.idfinance.cryptocurrency.dto.UserSubscriptionWithPrice;
 import com.idfinance.cryptocurrency.model.CryptoCoin;
 import com.idfinance.cryptocurrency.service.userNotifyService.api.IUserNotifyService;
 
@@ -18,39 +17,39 @@ import static java.lang.String.format;
 public class UserNotifyService implements IUserNotifyService {
 
     private static final Logger log = Logger.getLogger(UserNotifyService.class.getName());
-    private final Map<String, HashSet<UserSubscription>> cache = new ConcurrentHashMap<>();
-    private final BigDecimal percentRate = new BigDecimal("0.01");
+    private final Map<String, HashSet<UserSubscriptionWithPrice>> cache = new ConcurrentHashMap<>();
+    private final BigDecimal percentRate = new BigDecimal("0.00001");
 
     /**
      * Метод добавляет подписку на coin
-     * @param request подписка
-     * @param coin токен
+     * @param userSubscriptionWithPrice подписка
      */
     @Override
-    public void addSubscription(CreateSubscriptionRequest request, CryptoCoin coin) {
-        if(cache.containsKey(coin.getSymbol())) {
-            cache.get(coin.getSymbol()).add(new UserSubscription(
-                    request.getUserName(), coin.getSymbol(), coin.getName(), coin.getUsd_price())
-            );
+    public void addSubscription(UserSubscriptionWithPrice userSubscriptionWithPrice) {
+        String key = userSubscriptionWithPrice.getSymbol();
+        HashSet<UserSubscriptionWithPrice> userSubscriptionWithPrices;
+        if(this.cache.containsKey(key)) {
+            userSubscriptionWithPrices = cache.get(key);
+            userSubscriptionWithPrices.add(userSubscriptionWithPrice);
         } else {
-            HashSet<UserSubscription> userSubscriptions = new HashSet<>();
-            userSubscriptions.add(new UserSubscription(
-                    request.getUserName(), coin.getSymbol(), coin.getName(), coin.getUsd_price())
-            );
-            cache.put(coin.getSymbol(), userSubscriptions);
+            userSubscriptionWithPrices = new HashSet<>();
+            userSubscriptionWithPrices.add(userSubscriptionWithPrice);
+            cache.put(key, userSubscriptionWithPrices);
         }
     }
 
     /**
      * Метод удаляет подписку на токен
-     * @param request подписка
+     * @param subscription подписка
      */
     @Override
-    public void deleteSubscription(CreateSubscriptionRequest request) {
-        if(cache.containsKey(request.getSymbol())) {
-            cache.get(request.getSymbol()).remove(new UserSubscription(request.getUserName(), request.getSymbol()));
-        } else {
-            throw new RuntimeException(format("You are not subscribed to %s ", request.getSymbol()));
+    public void deleteSubscription(UserSubscriptionWithPrice subscription) {
+        boolean removeFlag = false;
+        if(cache.containsKey(subscription.getSymbol())) {
+            removeFlag = cache.get(subscription.getSymbol()).remove(subscription);
+        }
+        if(!removeFlag) {
+            throw new RuntimeException(format("You are not subscribed to %s ", subscription.getSymbol()));
         }
     }
 
@@ -61,17 +60,16 @@ public class UserNotifyService implements IUserNotifyService {
      */
     @Override
     public void checkPrice(CryptoCoin coin) {
-        for (Map.Entry<String, HashSet<UserSubscription>> e: this.cache.entrySet()) {
-            if(e.getKey().equals(coin.getSymbol())) {
-                for (UserSubscription userSubscription: e.getValue()) {
-                    BigDecimal delta = userSubscription.getPrice().
-                            divide(coin.getUsd_price(), 9, RoundingMode.HALF_EVEN).subtract(BigDecimal.ONE).abs();
-                    if((delta.compareTo(percentRate) >= 0)) {
-                        log.log(Level.WARNING, format("Token = %s,User = %s, percent change = %s",
-                                userSubscription.getSymbol(),
-                                userSubscription.getUserName(),
-                                delta.multiply(BigDecimal.valueOf(100L))));
-                    }
+        HashSet<UserSubscriptionWithPrice> userSubscriptionWithPrices = this.cache.get(coin.getSymbol());
+        if(!userSubscriptionWithPrices.isEmpty()) {
+            for (UserSubscriptionWithPrice userSubscriptionWithPrice : userSubscriptionWithPrices) {
+                BigDecimal delta = userSubscriptionWithPrice.getPrice().
+                        divide(coin.getUsd_price(), 9, RoundingMode.HALF_EVEN).subtract(BigDecimal.ONE).abs();
+                if((delta.compareTo(percentRate) >= 0)) {
+                    log.log(Level.WARNING, format("Token = %s,User = %s, percent change = %s",
+                            userSubscriptionWithPrice.getSymbol(),
+                            userSubscriptionWithPrice.getUserName(),
+                            delta.multiply(BigDecimal.valueOf(100L))));
                 }
             }
         }

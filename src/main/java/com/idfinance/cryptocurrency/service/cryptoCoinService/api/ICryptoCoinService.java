@@ -1,7 +1,7 @@
 package com.idfinance.cryptocurrency.service.cryptoCoinService.api;
 
 import com.idfinance.cryptocurrency.dto.CoinView;
-import com.idfinance.cryptocurrency.dto.CreateSubscriptionRequest;
+import com.idfinance.cryptocurrency.dto.UserSubscription;
 
 import java.util.List;
 
@@ -24,11 +24,11 @@ public interface ICryptoCoinService {
      * Добавить подписку на токен
      * @param request подписка
      */
-    void addSubscription(CreateSubscriptionRequest request);
+    void addSubscription(UserSubscription request);
 
     /**
      * Удалить подписку на токен
      * @param request подписка
      */
-    void deleteSubscription(CreateSubscriptionRequest request);
+    void deleteSubscription(UserSubscription request);
 }

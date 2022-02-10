@@ -3,10 +3,12 @@ package com.idfinance.cryptocurrency.service.CoinLoreService;
 import com.idfinance.cryptocurrency.dto.Coin;
 import com.idfinance.cryptocurrency.dto.CoinView;
 import com.idfinance.cryptocurrency.service.CoinLoreService.api.ICoinLoreResponseService;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -14,7 +16,7 @@ public class CoinLoreResponseService implements ICoinLoreResponseService {
 
     private final RestTemplate restTemplate;
     private final CoinLoreRequestProperty coinLoreRequestProperty;
-    private final BlockingQueue<CoinView> coinViewBlockingQueue;
+    private final BlockingQueue<Optional<CoinView>> coinViewBlockingQueue;
 
     public CoinLoreResponseService(RestTemplate restTemplate, CoinLoreRequestProperty coinLoreRequestProperty) {
         this.restTemplate = restTemplate;
@@ -38,9 +40,17 @@ public class CoinLoreResponseService implements ICoinLoreResponseService {
      * @return блокирующая очередь потоков, очередь ограничена количеством токенов в конфигурации CoinLoreRequestProperty
      */
     @Override
-    public BlockingQueue<CoinView> getResponse(Long id) {
-        this.coinViewBlockingQueue.add(Objects.requireNonNull(
-                restTemplate.getForObject((coinLoreRequestProperty.getBaseUrl() + "/?id=" + id), CoinView[].class))[0]);
+    public BlockingQueue<Optional<CoinView>> getResponse(Long id) {
+        CoinView[] coinViews = null;
+        try {
+            coinViews = restTemplate.getForObject((coinLoreRequestProperty.getBaseUrl() + "/?id=" + id), CoinView[].class);
+        } catch (RestClientException exception) {
+            exception.printStackTrace();
+        }
+        if(coinViews != null) {
+           Optional<CoinView> coinView = Arrays.stream(coinViews).findFirst();
+            this.coinViewBlockingQueue.add(coinView);
+        }
         return this.coinViewBlockingQueue;
     }
 
