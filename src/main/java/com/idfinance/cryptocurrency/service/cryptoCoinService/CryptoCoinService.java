@@ -78,7 +78,7 @@ public class CryptoCoinService implements ICryptoCoinService {
      * Метод асинхронной загрузки данных из удаленного источника в бд
      * Если цена токена изменилась, сохраняем изменения в бд и проверяем подписку
      */
-    public void loadCoinsData() {
+    private void loadCoinsData() {
         for (Coin e:coinLoreResponseService.getAllAvailableCoins()) {
             CompletableFuture.supplyAsync(() -> this.coinLoreResponseService.getResponse(e.getId()))
                     .whenCompleteAsync((result, exp) -> {
