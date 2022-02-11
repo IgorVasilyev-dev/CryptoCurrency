@@ -80,13 +80,7 @@ public class CryptoCoinService implements ICryptoCoinService {
     private void loadCoinsData() {
         for (Coin e:coinLoreResponseService.getAllAvailableCoins()) {
             CompletableFuture.supplyAsync(() -> this.coinLoreResponseService.getResponse(e.getId()))
-                    .whenCompleteAsync((result, exception) -> {
-                        if(exception == null) {
-                            this.checkAndSave(result);
-                        } else {
-                            exception.printStackTrace();
-                        }
-                    });
+                    .whenCompleteAsync((result, exception) -> this.checkAndSave(result));
         }
     }
 
