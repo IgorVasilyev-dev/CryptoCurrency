@@ -21,5 +21,5 @@ public interface IUserNotifyService {
      * Проверить стоимость токена
      * @param coin токен
      */
-    void checkPrice(CryptoCoin coin);
+    void checkSubscription(CryptoCoin coin);
 }

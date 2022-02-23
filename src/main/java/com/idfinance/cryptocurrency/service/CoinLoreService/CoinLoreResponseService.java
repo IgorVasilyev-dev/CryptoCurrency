@@ -24,7 +24,6 @@ public class CoinLoreResponseService implements ICoinLoreResponseService {
         this.coinViewBlockingQueue = new ArrayBlockingQueue<>(coinLoreRequestProperty.getCoinList().size());
     }
 
-
     /**
      * Получить список доступных монет из конфигурации CoinLoreRequestProperty
      * @return список доступных монет
@@ -49,7 +48,7 @@ public class CoinLoreResponseService implements ICoinLoreResponseService {
         }
         if(coinViews != null) {
            Optional<CoinView> coinView = Arrays.stream(coinViews).findFirst();
-            this.coinViewBlockingQueue.add(coinView);
+           this.coinViewBlockingQueue.add(coinView);
         }
         return this.coinViewBlockingQueue;
     }

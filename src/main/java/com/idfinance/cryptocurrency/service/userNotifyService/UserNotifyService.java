@@ -22,18 +22,18 @@ public class UserNotifyService implements IUserNotifyService {
 
     /**
      * Метод добавляет подписку на coin
-     * @param userSubscriptionWithPrice подписка
+     * @param subscription подписка
      */
     @Override
-    public void addSubscription(UserSubscriptionWithPrice userSubscriptionWithPrice) {
-        String key = userSubscriptionWithPrice.getSymbol();
+    public void addSubscription(UserSubscriptionWithPrice subscription) {
+        String key = subscription.getSymbol();
         HashSet<UserSubscriptionWithPrice> userSubscriptionWithPrices;
         if(this.cache.containsKey(key)) {
             userSubscriptionWithPrices = cache.get(key);
-            userSubscriptionWithPrices.add(userSubscriptionWithPrice);
+            userSubscriptionWithPrices.add(subscription);
         } else {
             userSubscriptionWithPrices = new HashSet<>();
-            userSubscriptionWithPrices.add(userSubscriptionWithPrice);
+            userSubscriptionWithPrices.add(subscription);
             cache.put(key, userSubscriptionWithPrices);
         }
     }
@@ -45,34 +45,47 @@ public class UserNotifyService implements IUserNotifyService {
     @Override
     public void deleteSubscription(UserSubscriptionWithPrice subscription) {
         boolean removeFlag = false;
-        if(cache.containsKey(subscription.getSymbol())) {
-            removeFlag = cache.get(subscription.getSymbol()).remove(subscription);
+        String symbol = subscription.getSymbol();
+        if(cache.containsKey(symbol)) {
+            removeFlag = cache.get(symbol).remove(subscription);
         }
         if(!removeFlag) {
-            throw new RuntimeException(format("You are not subscribed to %s ", subscription.getSymbol()));
+            throw new RuntimeException(format("You are not subscribed to %s ", symbol));
         }
     }
 
     /**
      * Метод проверки стоимости токена к стоимости токена в подписке
-     * Если стоимость изменилась на 1%, в лог пишется сообщение уровня WARN
+     * Если стоимость изменилась на величину percentRate, в лог пишется сообщение уровня WARN
      * @param coin токен
      */
     @Override
-    public void checkPrice(CryptoCoin coin) {
+    public void checkSubscription(CryptoCoin coin) {
         HashSet<UserSubscriptionWithPrice> userSubscriptionWithPrices = this.cache.get(coin.getSymbol());
         if(!userSubscriptionWithPrices.isEmpty()) {
-            for (UserSubscriptionWithPrice userSubscriptionWithPrice : userSubscriptionWithPrices) {
-                BigDecimal delta = userSubscriptionWithPrice.getPrice().
-                        divide(coin.getUsd_price(), 9, RoundingMode.HALF_EVEN).subtract(BigDecimal.ONE).abs();
-                if((delta.compareTo(percentRate) >= 0)) {
-                    log.log(Level.WARNING, format("Token = %s,User = %s, percent change = %s",
-                            userSubscriptionWithPrice.getSymbol(),
-                            userSubscriptionWithPrice.getUserName(),
-                            delta.multiply(BigDecimal.valueOf(100L))));
+            for (UserSubscriptionWithPrice subscription : userSubscriptionWithPrices) {
+                BigDecimal delta = calculateDelta(subscription.getPrice(), coin.getUsd_price());
+                boolean isChangeOnPercentRate = checkDeltaChangeOnPercentRate(delta);
+                if(isChangeOnPercentRate) {
+                    logUserNotification(subscription, delta);
                 }
             }
         }
+    }
+
+    private boolean checkDeltaChangeOnPercentRate(BigDecimal delta) {
+        return delta.compareTo(percentRate) >= 0;
+    }
+
+    private void logUserNotification(UserSubscriptionWithPrice subscription, BigDecimal delta) {
+        log.log(Level.WARNING, format("Token = %s,User = %s, percent change = %s",
+                subscription.getSymbol(),
+                subscription.getUserName(),
+                delta.multiply(BigDecimal.valueOf(100L))));
+    }
+
+    private BigDecimal calculateDelta(BigDecimal subscriptionPrice, BigDecimal coinPrice) {
+        return subscriptionPrice.divide(coinPrice, 9, RoundingMode.HALF_EVEN).subtract(BigDecimal.ONE).abs();
     }
 
 }

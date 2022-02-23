@@ -77,10 +77,10 @@ public class CryptoCoinService implements ICryptoCoinService {
     /**
      * Метод асинхронной загрузки данных из удаленного источника в бд
      */
-    private void loadCoinsData() {
-        for (Coin e:coinLoreResponseService.getAllAvailableCoins()) {
-            CompletableFuture.supplyAsync(() -> this.coinLoreResponseService.getResponse(e.getId()))
-                    .whenCompleteAsync((result, exception) -> this.checkAndSave(result));
+    private void asyncLoadCoinsData() {
+        for (Coin coin:coinLoreResponseService.getAllAvailableCoins()) {
+            CompletableFuture.supplyAsync(() -> this.coinLoreResponseService.getResponse(coin.getId()))
+                    .whenCompleteAsync((result, exception) -> checkPriceAndSaveChange(result));
         }
     }
 
@@ -89,35 +89,50 @@ public class CryptoCoinService implements ICryptoCoinService {
      * Если цена токена изменилась, сохраняем изменения в бд и проверяем подписку
      * @param result BlockingQueue<CoinView>
      */
-    private void checkAndSave(BlockingQueue<Optional<CoinView>> result) {
+    private void checkPriceAndSaveChange(BlockingQueue<Optional<CoinView>> result) {
+        Optional<CoinView> optionalCoinView = getOptionalResult(result);
+        if(optionalCoinView.isPresent()) {
+            CoinView coinView = optionalCoinView.get();
+            CryptoCoin cryptoCoin = this.repository.findBySymbol(coinView.getSymbol())
+                    .orElseGet(() -> this.repository.save(new CryptoCoin(coinView)));
+            boolean isPriceChange = isPriceChange(coinView, cryptoCoin);
+            if(isPriceChange) {
+                saveChange(coinView, cryptoCoin);
+                checkSubscription(coinView);
+            }
+        }
+    }
+
+    private void saveChange(CoinView coinView, CryptoCoin cryptoCoin) {
+        cryptoCoin.setUsd_price(coinView.getBigDecimalPrice_usd());
+        this.repository.save(cryptoCoin);
+    }
+
+    private void checkSubscription(CoinView coinView) {
+        this.userNotifyService.checkSubscription(new CryptoCoin(coinView));
+    }
+
+    private Optional<CoinView> getOptionalResult(BlockingQueue<Optional<CoinView>> result) {
         Optional<CoinView> optionalCoinView = Optional.empty();
         try {
             optionalCoinView = result.take();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        if (optionalCoinView.isPresent()) {
-            CoinView source = optionalCoinView.get();
-            Optional<CryptoCoin> cryptoCoinOptional = this.repository.findBySymbol(source.getSymbol());
-            if(cryptoCoinOptional.isPresent()) {
-                CryptoCoin target = cryptoCoinOptional.get();
-                if(!target.getUsd_price().equals(source.getBigDecimalPrice_usd())) {
-                    target.setUsd_price(source.getBigDecimalPrice_usd());
-                    userNotifyService.checkPrice(this.repository.save(target));
-                }
-            } else {
-                this.repository.save(new CryptoCoin(source));
-            }
-        }
+        return optionalCoinView;
+    }
+
+    private boolean isPriceChange(CoinView coinView, CryptoCoin cryptoCoin) {
+        return coinView.getBigDecimalPrice_usd().compareTo(cryptoCoin.getUsd_price()) != 0;
     }
 
     /**
-     * Метод запуска loadCoinsData с периодом(каждые 60 сек), запускается при полной загрузке приложения
+     * Метод запуска asyncLoadCoinsData с периодом(каждые 60 сек), запускается при полной загрузке приложения
      */
     @EventListener(ApplicationReadyEvent.class)
     public void loadCoinsDataAfterStartup() {
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-        scheduler.scheduleAtFixedRate(this::loadCoinsData, 0, 1, TimeUnit.MINUTES);
+        scheduler.scheduleAtFixedRate(this::asyncLoadCoinsData, 0, 1, TimeUnit.MINUTES);
     }
 
 }
