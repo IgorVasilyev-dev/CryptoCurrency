@@ -1,5 +1,6 @@
 package com.idfinance.cryptocurrency.service.userNotifyService;
 
+import com.idfinance.cryptocurrency.dto.UserSubscription;
 import com.idfinance.cryptocurrency.dto.UserSubscriptionWithPrice;
 import com.idfinance.cryptocurrency.model.CryptoCoin;
 import com.idfinance.cryptocurrency.service.userNotifyService.api.IUserNotifyService;
@@ -17,23 +18,27 @@ import static java.lang.String.format;
 public class UserNotifyService implements IUserNotifyService {
 
     private static final Logger log = Logger.getLogger(UserNotifyService.class.getName());
+    private final static BigDecimal percentRate = new BigDecimal("0.01");
+    private final static BigDecimal ONE_HUNDRED = new BigDecimal(100L);
+
     private final Map<String, HashSet<UserSubscriptionWithPrice>> cache = new ConcurrentHashMap<>();
-    private final BigDecimal percentRate = new BigDecimal("0.01");
 
     /**
-     * Метод добавляет подписку на coin
-     * @param subscription подписка
+     * Метод добавляет подписку на CryptoCoin по его symbol
+     * @param userName имя подписчика
+     * @param cryptoCoin coin на который подписываются
      */
     @Override
-    public void addSubscription(UserSubscriptionWithPrice subscription) {
-        String key = subscription.getSymbol();
+    public void addSubscription(String userName, CryptoCoin cryptoCoin) {
+        UserSubscriptionWithPrice subscriptionWithPrice = new UserSubscriptionWithPrice(userName, cryptoCoin);
+        String key = cryptoCoin.getSymbol();
         HashSet<UserSubscriptionWithPrice> userSubscriptionWithPrices;
         if(this.cache.containsKey(key)) {
             userSubscriptionWithPrices = cache.get(key);
-            userSubscriptionWithPrices.add(subscription);
+            userSubscriptionWithPrices.add(subscriptionWithPrice);
         } else {
             userSubscriptionWithPrices = new HashSet<>();
-            userSubscriptionWithPrices.add(subscription);
+            userSubscriptionWithPrices.add(subscriptionWithPrice);
             cache.put(key, userSubscriptionWithPrices);
         }
     }
@@ -43,11 +48,11 @@ public class UserNotifyService implements IUserNotifyService {
      * @param subscription подписка
      */
     @Override
-    public void deleteSubscription(UserSubscriptionWithPrice subscription) {
+    public void deleteSubscription(UserSubscription subscription) {
         boolean removeFlag = false;
         String symbol = subscription.getSymbol();
         if(cache.containsKey(symbol)) {
-            removeFlag = cache.get(symbol).remove(subscription);
+            removeFlag = cache.get(symbol).remove(new UserSubscriptionWithPrice(subscription));
         }
         if(!removeFlag) {
             throw new RuntimeException(format("You are not subscribed to %s ", symbol));
@@ -81,7 +86,7 @@ public class UserNotifyService implements IUserNotifyService {
         log.log(Level.WARNING, format("Token = %s,User = %s, percent change = %s",
                 subscription.getSymbol(),
                 subscription.getUserName(),
-                delta.multiply(BigDecimal.valueOf(100L))));
+                delta.multiply(ONE_HUNDRED)));
     }
 
     private BigDecimal calculateDelta(BigDecimal subscriptionPrice, BigDecimal coinPrice) {

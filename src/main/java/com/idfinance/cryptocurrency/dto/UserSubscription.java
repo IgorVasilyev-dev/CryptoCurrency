@@ -6,10 +6,10 @@ import java.util.Objects;
 public class UserSubscription {
 
     @NotBlank
-    private String userName;
+    private final String userName;
 
     @NotBlank
-    private String symbol;
+    private final String symbol;
 
     public UserSubscription(String userName, String symbol) {
         this.userName = userName;
@@ -20,16 +20,8 @@ public class UserSubscription {
         return userName;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
     public String getSymbol() {
         return symbol;
-    }
-
-    public void setSymbol(String symbol) {
-        this.symbol = symbol;
     }
 
     @Override

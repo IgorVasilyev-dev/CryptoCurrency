@@ -3,7 +3,6 @@ package com.idfinance.cryptocurrency.service.cryptoCoinService;
 import com.idfinance.cryptocurrency.dto.Coin;
 import com.idfinance.cryptocurrency.dto.CoinView;
 import com.idfinance.cryptocurrency.dto.UserSubscription;
-import com.idfinance.cryptocurrency.dto.UserSubscriptionWithPrice;
 import com.idfinance.cryptocurrency.model.CryptoCoin;
 import com.idfinance.cryptocurrency.service.CoinLoreService.api.ICoinLoreResponseService;
 import com.idfinance.cryptocurrency.service.cryptoCoinService.api.ICryptoCoinService;
@@ -54,24 +53,22 @@ public class CryptoCoinService implements ICryptoCoinService {
 
     /**
      * Добавить подписку на токен
-     * @param request подписка
+     * @param subscription подписка
      */
     @Override
-    public void addSubscription(UserSubscription request) {
-        CryptoCoin cryptoCoin = this.repository.findBySymbol(request.getSymbol()).orElseThrow(
-                () -> new RuntimeException(format("CryptoCoin with symbol = %s Not Found", request.getSymbol())));
-        this.userNotifyService.addSubscription(new UserSubscriptionWithPrice(
-                request.getUserName(), cryptoCoin));
+    public void addSubscription(UserSubscription subscription) {
+        CryptoCoin cryptoCoin = this.repository.findBySymbol(subscription.getSymbol()).orElseThrow(
+                () -> new RuntimeException(format("CryptoCoin with symbol = %s Not Found", subscription.getSymbol())));
+        this.userNotifyService.addSubscription(subscription.getUserName(), cryptoCoin);
     }
 
     /**
      * Удалить подписку на токен
-     * @param request подписка
+     * @param subscription подписка
      */
     @Override
-    public void deleteSubscription(UserSubscription request) {
-        this.userNotifyService.deleteSubscription(new UserSubscriptionWithPrice(
-                request.getUserName(), request.getSymbol()));
+    public void deleteSubscription(UserSubscription subscription) {
+        this.userNotifyService.deleteSubscription(subscription);
     }
 
     /**
